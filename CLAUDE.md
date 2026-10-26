@@ -1,4 +1,4 @@
-# CLAUDE.md — Aarush's Stacks
+# CLAUDE.md — Aarush's Library
 
 Personal portfolio site. It shows a pixel-art library wall packed with books. The user types commands into a console at the bottom. A grumpy librarian rolls a ladder over, climbs to the right shelf, pulls the book, and opens it so the visitor can read it page by page. Hidden easter eggs are scattered around.
 

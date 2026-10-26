@@ -16,7 +16,7 @@ Undecided. Visitors to Aarush's personal portfolio site; specific audience (e.g.
 
 ## Product Purpose
 
-"Aarush's Stacks": a personal portfolio presented as a pixel-art library. Visitors type commands into a console; a grumpy librarian fetches the matching book and opens it to read page by page.
+"Aarush's Library": a personal portfolio presented as a pixel-art library. Visitors type commands into a console; a grumpy librarian fetches the matching book and opens it to read page by page.
 
 ## Capabilities and Constraints
 
@@ -26,7 +26,7 @@ Undecided. Visitors to Aarush's personal portfolio site; specific audience (e.g.
 
 ## Brand Commitments
 
-- Name: "Aarush's Stacks".
+- Name: "Aarush's Library".
 - The librarian is a boy with round glasses and black hair who grows annoyed with each request.
 - Visual rules in CLAUDE.md §1 are binding: 2D black-and-white pixel art, four-value palette, pixel fonts only.
 

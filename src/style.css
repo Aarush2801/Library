@@ -22,6 +22,8 @@
   --paper: #f0efe8;
   --ui: 'Press Start 2P', monospace;
   --label: 'Silkscreen', monospace;
+  --read: 'VT323', monospace;
+  --log-line: 20px;
   --stage-w: 100%;
   --gutter: 16px;
   color-scheme: dark;
@@ -84,7 +86,8 @@ body {
 
 .console__bar {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
   font-family: var(--label);
   font-size: 16px;
   line-height: 16px;
@@ -92,12 +95,91 @@ body {
   text-transform: uppercase;
 }
 
-.console__caption {
-  margin: 12px 0 0;
-  font-size: 8px;
-  text-transform: uppercase;
+.console__hover {
+  flex: 1;
   color: var(--paper);
-  min-height: 16px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Patience meter: ten segments, lit from the left. */
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.hud__label {
+  padding: 0 4px;
+}
+
+.meter {
+  display: flex;
+  gap: 2px;
+}
+
+.meter__seg {
+  width: 6px;
+  height: 12px;
+  border: 2px solid var(--dark);
+}
+
+.meter__seg.is-on {
+  background: var(--paper);
+  border-color: var(--paper);
+}
+
+.hud.is-low .meter__seg.is-on {
+  animation: blink 0.8s steps(1) infinite;
+}
+
+.hud.is-closed .hud__label {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+@keyframes blink {
+  50% {
+    background: var(--ink);
+    border-color: var(--dark);
+  }
+}
+
+@media (max-width: 519px) {
+  .console__title {
+    display: none;
+  }
+}
+
+/* Fixed two-line window onto the log, scrollable for history.
+   Fixed height so new lines never resize the scene above. */
+.console__log {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  height: calc(var(--log-line) * 2);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dark) var(--ink);
+  font-family: var(--read);
+  font-size: 20px;
+  line-height: var(--log-line);
+}
+
+.line {
+  overflow-wrap: anywhere;
+}
+
+.line--cmd {
+  color: var(--light);
+}
+
+.line--say {
+  color: var(--paper);
 }
 
 .console:focus-within {
@@ -172,9 +254,256 @@ body {
 }
 
 @media (min-width: 720px) {
-  .console__caption {
-    font-size: 16px;
-    line-height: 24px;
+  :root {
+    --log-line: 24px;
+  }
+  .console__log {
+    font-size: 24px;
+  }
+}
+
+.chip--skip {
+  flex: none;
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--paper);
+}
+
+.chip--skip:hover {
+  background: var(--light);
+  border-color: var(--light);
+}
+
+.chip:disabled {
+  color: var(--dark);
+  border-color: var(--dark);
+  background: var(--ink);
+  cursor: default;
+}
+
+/* ── Tome (book reader) ───────────────────────────────────────── */
+
+.tome {
+  --u: 3px; /* CSS px per book pixel, set from JS */
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+/* 50% ink checker: a dither, not a translucent fade. */
+.tome::backdrop {
+  background: repeating-conic-gradient(var(--ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+}
+
+.tome__book {
+  position: relative;
+  margin-inline: auto;
+  width: min(calc(100vw - 32px), 960px, calc((100dvh - 120px) * 1.6));
+  aspect-ratio: 320 / 200;
+}
+
+.tome.is-single .tome__book {
+  width: min(calc(100vw - 32px), calc((100dvh - 120px) * 172 / 220));
+  aspect-ratio: 172 / 220;
+}
+
+.tome__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.tome__page {
+  position: absolute;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--light) var(--paper);
+  font-family: var(--read);
+  font-size: calc(var(--u) * 8);
+  line-height: calc(var(--u) * 9);
+  color: var(--ink);
+}
+
+.tome__page h2,
+.tome__page h3 {
+  font-family: var(--ui);
+  font-size: calc(var(--u) * 5);
+  line-height: calc(var(--u) * 8);
+  font-weight: normal;
+  margin: 0 0 calc(var(--u) * 4);
+}
+
+.tome__page p {
+  margin: 0 0 calc(var(--u) * 5);
+}
+
+.tome__page a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: calc(var(--u) * 1);
+}
+
+.tome__page a:hover {
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+}
+
+.tome__page a:focus-visible {
+  outline: calc(var(--u) * 1) solid var(--ink);
+  outline-offset: calc(var(--u) * 0.5);
+}
+
+.tome__page ::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Title page */
+.tp {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.tp .tp__title {
+  font-size: calc(var(--u) * 8);
+  line-height: calc(var(--u) * 12);
+  margin: calc(var(--u) * 4) 0 calc(var(--u) * 10);
+  text-wrap: balance;
+}
+
+.tp__call,
+.tp__shelf {
+  font-family: var(--label);
+  font-size: calc(var(--u) * 5);
+  line-height: calc(var(--u) * 7);
+  color: var(--dark);
+  text-transform: uppercase;
+}
+
+.tp__from {
+  font-style: normal;
+}
+
+/* DATE DUE card */
+.card {
+  border: calc(var(--u) * 1) solid var(--ink);
+  padding: calc(var(--u) * 4);
+  background: var(--paper);
+}
+
+.card__head {
+  font-family: var(--ui);
+  font-size: calc(var(--u) * 5);
+  line-height: calc(var(--u) * 8);
+  text-align: center;
+  text-transform: uppercase;
+  margin: 0 0 calc(var(--u) * 2);
+}
+
+.card__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card__rows li {
+  height: calc(var(--u) * 14);
+  border-top: calc(var(--u) * 1) solid var(--ink);
+  display: flex;
+  align-items: center;
+}
+
+.card__rows li:nth-child(odd) .stamp {
+  margin-left: calc(var(--u) * 6);
+}
+
+.card__rows li:nth-child(even) .stamp {
+  margin-left: calc(var(--u) * 14);
+}
+
+.stamp {
+  font-family: var(--label);
+  font-size: calc(var(--u) * 5);
+  line-height: calc(var(--u) * 7);
+  padding: 0 calc(var(--u) * 2);
+  border: calc(var(--u) * 1) solid var(--dark);
+  color: var(--dark);
+}
+
+/* New stamp lands frame by frame: big, then pressed, then settled. */
+.stamp--new {
+  color: var(--ink);
+  border-color: var(--ink);
+  animation: stamp 0.5s steps(1) both;
+}
+
+@keyframes stamp {
+  0% {
+    visibility: hidden;
+  }
+  40% {
+    visibility: visible;
+    border-width: calc(var(--u) * 2);
+    background: var(--light);
+  }
+  70% {
+    border-width: calc(var(--u) * 1);
+    background: var(--light);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.card__foot {
+  margin: calc(var(--u) * 3) 0 0 !important;
+  font-family: var(--label);
+  font-size: calc(var(--u) * 4);
+  line-height: calc(var(--u) * 6);
+  text-align: right;
+  color: var(--dark);
+}
+
+.tome__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: calc(100vw - 32px);
+  margin: 16px auto 0;
+  padding: 8px 12px;
+  background: var(--ink);
+  border: 4px solid var(--paper);
+  box-shadow: inset 0 0 0 4px var(--ink), inset 0 0 0 6px var(--dark);
+}
+
+.tome__count {
+  font-family: var(--label);
+  font-size: 16px;
+  color: var(--paper);
+  min-width: 96px;
+  text-align: center;
+}
+
+.tome__close {
+  margin-left: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stamp--new,
+  .hud.is-low .meter__seg.is-on {
+    animation: none;
   }
 }
 

@@ -3,29 +3,52 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Aarush's portfolio, kept in a pixel-art library by a grumpy librarian." />
+    <meta name="description" content="Aarush's Library: a portfolio kept in a pixel-art library by a grumpy librarian." />
     <meta name="theme-color" content="#0d0d0d" />
     <link rel="preload" href="/fonts/pressstart2p.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/silkscreen.woff2" as="font" type="font/woff2" crossorigin />
-    <title>Aarush's Stacks</title>
+    <link rel="preload" href="/fonts/vt323.woff2" as="font" type="font/woff2" crossorigin />
+    <title>Aarush's Library</title>
   </head>
   <body>
     <main class="app">
-      <h1 class="visually-hidden">Aarush's Stacks</h1>
+      <h1 class="visually-hidden">Aarush's Library</h1>
       <div class="stage" id="stage"></div>
       <section class="console" id="console" aria-label="Library console">
         <div class="console__bar">
-          <span class="console__title">Aarush's Stacks</span>
+          <span class="console__title">Aarush's Library</span>
+          <div class="hud" data-hud>
+            <span class="hud__label" id="patience-label" data-meter-label>Patience</span>
+            <span class="meter" data-meter role="meter" aria-labelledby="patience-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"></span>
+          </div>
+          <span class="console__hover" data-hover></span>
         </div>
-        <p class="console__caption" data-caption aria-live="polite">Type a command or pick one below</p>
+        <ol class="console__log" data-log aria-live="polite" aria-label="Library log" tabindex="0">
+          <li class="line line--say">Type a command or pick one below.</li>
+        </ol>
         <ul class="console__commands" data-commands aria-label="Commands"></ul>
         <form class="console__prompt" data-form autocomplete="off">
           <label for="cmd" class="visually-hidden">Command</label>
           <span aria-hidden="true">&gt;</span>
           <input id="cmd" data-input type="text" spellcheck="false" autocapitalize="off" enterkeyhint="go" />
+          <button type="button" class="chip chip--skip" data-skip hidden>Skip</button>
         </form>
       </section>
     </main>
+
+    <dialog class="tome" id="tome">
+      <div class="tome__book" data-book>
+        <canvas class="tome__art" data-art aria-hidden="true"></canvas>
+        <article class="tome__page" data-page hidden></article>
+        <article class="tome__page" data-page hidden></article>
+      </div>
+      <div class="tome__controls">
+        <button type="button" class="chip" data-prev>Prev</button>
+        <span class="tome__count" data-count aria-live="polite"></span>
+        <button type="button" class="chip" data-next>Next</button>
+        <button type="button" class="chip tome__close" data-close>Return book</button>
+      </div>
+    </dialog>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

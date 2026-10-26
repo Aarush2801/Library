@@ -1,6 +1,11 @@
 // ALL portfolio copy lives here. Never invent facts: leave TODO: until Aarush supplies them.
 // shelf: 0 = bottom shelf, counting up. slot: spine position from the left of that shelf.
 
+export const OWNER = {
+  name: 'Aarush',
+  whoami: 'TODO: one-line bio for the whoami command.',
+};
+
 export const BOOKS = [
   {
     slug: 'resume',

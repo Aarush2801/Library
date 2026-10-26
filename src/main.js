@@ -1,6 +1,6 @@
 // Boot, scaling and letterboxing; wires the console to the librarian.
 import { Application, TextureSource } from 'pixi.js';
-import { LIB, PALETTE, PATIENCE, RES, TOME } from './config.js';
+import { PALETTE, PATIENCE, RES, TOME } from './config.js';
 import { BOOKS } from './content/books.js';
 import { BUSY, CLOSED, HANDOFF, fetchLine, pick } from './content/lines.js';
 import { createCommands } from './commands.js';
@@ -11,6 +11,7 @@ import { createConsole } from './ui/console.js';
 import { createTome } from './ui/tome.js';
 import { createHud } from './ui/hud.js';
 import { createMood } from './mood.js';
+import { createEggs } from './eggs.js';
 import './style.css';
 
 TextureSource.defaultOptions.scaleMode = 'nearest';
@@ -59,20 +60,31 @@ const run = createCommands({
   },
   skip: () => fetcher.skip(),
   unknown: () => mood.spend(PATIENCE.unknownCost),
-  manners: () => mood.manners(),
-  coffee: () => mood.coffee(),
+  canRead: (book) => eggs.isUnlocked(book.slug),
 });
 
 const ui = createConsole(consoleEl, {
-  onCommand: (text) => devCommand(text) || run(text),
+  onCommand: (text) => devCommand(text) || eggs.handle(text) || run(text),
   onSkip: () => fetcher.skip(),
 });
 
+const hud = createHud(consoleEl.querySelector('[data-hud]'));
+
 const mood = createMood({
   getLibrary: () => library,
-  hud: createHud(consoleEl.querySelector('[data-hud]')),
+  hud,
   log: (text) => ui.log(text),
   isBusy: () => fetcher.busy,
+});
+
+const eggs = createEggs({
+  getLibrary: () => library,
+  log: (text) => ui.log(text),
+  mood,
+  hud,
+  isBusy: () => fetcher.busy,
+  run: (text) => run(text),
+  reducedMotion,
 });
 
 // Esc while he's fetching skips straight to the book (the reader handles its own Esc).
@@ -93,6 +105,13 @@ app.canvas.setAttribute('aria-label', 'A pixel-art library wall full of books');
 app.canvas.setAttribute('role', 'img');
 stage.appendChild(app.canvas);
 
+// The lights-out lamp follows the pointer (scene pixels). A DOM listener, so the
+// scene root never has to be interactive and swallow clicks meant for books.
+app.canvas.addEventListener('pointermove', (e) => {
+  const r = app.canvas.getBoundingClientRect();
+  library?.darkness.moveTo(((e.clientX - r.left) / r.width) * sceneW, ((e.clientY - r.top) / r.height) * RES.H);
+});
+
 function build(w) {
   library?.destroy();
   library = createLibrary(w, BOOKS, {
@@ -100,16 +119,12 @@ function build(w) {
     onHover: (book) => ui.setHover(book),
     // Clicking a spine is the same as typing fetch.
     onSelect: (book) => ui.submit(`fetch ${book.slug}`),
-    onPoke: () => {
-      if (fetcher.busy) return;
-      if (mood.closed) return ui.log('Zzz.');
-      library.librarian.hold('huff', LIB.pokeHuffMs);
-      ui.log('Hey. No poking the librarian.');
-    },
+    onPoke: () => eggs.poke(),
   });
   app.stage.addChild(library.root);
   mood.applyToScene();
-  if (import.meta.env.DEV) window.__library = library;
+  eggs.applyToScene();
+  if (import.meta.env.DEV) Object.assign(window, { __library: library, __app: app });
 }
 
 // Dev-only: `anim <state>` previews one librarian state. Stripped from builds.

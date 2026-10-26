@@ -137,6 +137,31 @@ body {
   animation: blink 0.8s steps(1) infinite;
 }
 
+.hud__secrets {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+/* Frame-swap flash when a new secret is found. */
+[data-secrets].is-new {
+  animation: found 0.9s steps(1);
+}
+
+@keyframes found {
+  0%,
+  33%,
+  66% {
+    color: var(--ink);
+    background: var(--paper);
+  }
+  17%,
+  50%,
+  83% {
+    color: var(--paper);
+    background: transparent;
+  }
+}
+
 .hud.is-closed .hud__label {
   color: var(--ink);
   background: var(--paper);
@@ -150,7 +175,8 @@ body {
 }
 
 @media (max-width: 519px) {
-  .console__title {
+  .console__title,
+  .hud__secrets-label {
     display: none;
   }
 }
@@ -502,7 +528,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .stamp--new,
-  .hud.is-low .meter__seg.is-on {
+  .hud.is-low .meter__seg.is-on,
+  [data-secrets].is-new {
     animation: none;
   }
 }

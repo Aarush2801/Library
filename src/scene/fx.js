@@ -1,5 +1,5 @@
 // Atmosphere: floor, dithered lamplight falloff and drifting dust.
-import { Container, Sprite } from 'pixi.js';
+import { Container, Sprite, Texture } from 'pixi.js';
 import { CSS, PALETTE, RES, SHELF, DUST, FPS } from '../config.js';
 import { canvasTexture, ditherTexture, rng } from './pixel.js';
 
@@ -76,4 +76,48 @@ export function createDust(w, reducedMotion) {
     }
   }
   return { container, update };
+}
+
+// Uniform ink dither over the whole scene (the "shh" dim). set(0) hides it.
+export function createDimmer(w) {
+  const cache = new Map();
+  const sprite = new Sprite();
+  sprite.eventMode = 'none';
+  sprite.visible = false;
+  return {
+    sprite,
+    set(level) {
+      sprite.visible = level > 0;
+      if (!level) return;
+      if (!cache.has(level)) cache.set(level, ditherTexture(w, RES.H, PALETTE.INK, () => level));
+      sprite.texture = cache.get(level);
+    },
+    destroy() {
+      sprite.texture = Texture.EMPTY;
+      for (const t of cache.values()) t.destroy(true);
+    },
+  };
+}
+
+// Lights out: solid ink with a dithered lamp circle cut out of the middle.
+// The texture is twice the scene size so the hole can reach every corner.
+export function createDarkness(w) {
+  const tw = w * 2;
+  const th = RES.H * 2;
+  const r0 = 26; // fully lit
+  const r1 = 44; // fully dark
+  const sprite = new Sprite(
+    ditherTexture(tw, th, PALETTE.INK, (x, y) => {
+      const d = Math.hypot(x - w, y - RES.H);
+      return Math.round(Math.min(1, Math.max(0, (d - r0) / (r1 - r0))) * 16) + (d > r1 ? 1 : 0);
+    }),
+  );
+  sprite.eventMode = 'none';
+  sprite.visible = false;
+  return {
+    sprite,
+    moveTo(x, y) {
+      sprite.position.set(Math.round(x) - w, Math.round(y) - RES.H);
+    },
+  };
 }

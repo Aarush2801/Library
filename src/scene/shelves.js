@@ -66,24 +66,24 @@ function woodPost(p, x, y, w, h) {
   p.rect(x + w - 1, y, 1, h, CSS.INK);
 }
 
-function drawFiller(p, s) {
+// Draws a filler spine with its top-left at (x, y).
+function drawFiller(p, s, x = s.x, y = rowBase(s.row) - s.h) {
   const r = rng(s.style);
-  const y = rowBase(s.row) - s.h;
   const body = [CSS.DARK, CSS.DARK, CSS.LIGHT, CSS.LIGHT, CSS.INK, CSS.PAPER][Math.floor(r() * 6)];
   const accent = body === CSS.INK || body === CSS.LIGHT ? CSS.DARK : body === CSS.PAPER ? CSS.LIGHT : CSS.LIGHT;
-  p.rect(s.x, y, s.w, s.h, body);
+  p.rect(x, y, s.w, s.h, body);
   const kind = Math.floor(r() * 4);
   if (kind === 0) {
-    p.rect(s.x, y + 3, s.w, 1, accent);
-    p.rect(s.x, y + s.h - 4, s.w, 1, accent);
+    p.rect(x, y + 3, s.w, 1, accent);
+    p.rect(x, y + s.h - 4, s.w, 1, accent);
   } else if (kind === 1) {
-    p.rect(s.x, y + 4, s.w, 3, accent);
+    p.rect(x, y + 4, s.w, 3, accent);
   } else if (kind === 2) {
-    p.dither(s.x, y, s.w, s.h, accent, 4);
+    p.dither(x, y, s.w, s.h, accent, 4);
   }
   // Rounded-spine shading: shadow on the right edge, cap on top.
-  p.rect(s.x + s.w - 1, y, 1, s.h, body === CSS.INK ? CSS.DARK : CSS.INK);
-  if (body !== CSS.INK) p.rect(s.x, y, s.w - 1, 1, CSS.DARK);
+  p.rect(x + s.w - 1, y, 1, s.h, body === CSS.INK ? CSS.DARK : CSS.INK);
+  if (body !== CSS.INK) p.rect(x, y, s.w - 1, 1, CSS.DARK);
 }
 
 // Portfolio books carry a paper label with "type" on it; fillers never do.
@@ -111,7 +111,8 @@ export function createShelves(w, books, { onHover, onSelect } = {}) {
   for (let row = 0; row < SHELF.rows; row++) spines.push(...layoutRow(row, bays, books));
 
   const plinthY = rowBase(0) + SHELF.board;
-  const caseTex = canvasTexture(w, caseBottom, (p) => {
+  // withSpines false gives bare shelves, shown while the books are on the floor.
+  const drawCase = (withSpines) => canvasTexture(w, caseBottom, (p) => {
     // Wall above the case, then the ladder rail and crown moulding.
     p.rect(0, 0, w, SHELF.crownY, CSS.PAPER);
     p.dither(0, 0, w, SHELF.crownY, CSS.LIGHT, 4);
@@ -127,7 +128,7 @@ export function createShelves(w, books, { onHover, onSelect } = {}) {
     p.rect(0, SHELF.top, w, plinthY - SHELF.top, CSS.INK);
     p.dither(0, SHELF.top, w, plinthY - SHELF.top, CSS.DARK, 1);
 
-    for (const s of spines) if (!s.book) drawFiller(p, s);
+    if (withSpines) for (const s of spines) if (!s.book) drawFiller(p, s);
 
     for (let row = 0; row < SHELF.rows; row++) {
       const y = rowBase(row);
@@ -159,8 +160,11 @@ export function createShelves(w, books, { onHover, onSelect } = {}) {
     }
   });
 
+  const fullTex = drawCase(true);
+  let emptyTex = null; // built on first use
+  const caseSprite = new Sprite(fullTex);
   const container = new Container();
-  container.addChild(new Sprite(caseTex));
+  container.addChild(caseSprite);
 
   const featured = [];
   for (const s of spines) {
@@ -188,5 +192,25 @@ export function createShelves(w, books, { onHover, onSelect } = {}) {
     console.warn('Books with a slot past the end of their shelf at this width:', missing.map((b) => b.slug));
   }
 
-  return { container, featured, bays };
+  return {
+    container,
+    featured,
+    bays,
+    spines,
+    // A standalone texture for one spine, for the avalanche.
+    spineTexture(s) {
+      return s.book ? featureTexture(s.book, s.w, s.h) : canvasTexture(s.w, s.h, (p) => drawFiller(p, s, 0, 0));
+    },
+    // Empty shelves (books gone) or full ones.
+    setEmpty(empty) {
+      if (empty) emptyTex ??= drawCase(false);
+      caseSprite.texture = empty ? emptyTex : fullTex;
+      for (const f of featured) f.sprite.visible = !empty;
+    },
+    // Call before the scene destroys its sprites, so each texture is freed once.
+    destroy() {
+      caseSprite.texture = fullTex;
+      emptyTex?.destroy(true);
+    },
+  };
 }

@@ -115,3 +115,22 @@ export const PATIENCE = {
   regenEveryMs: 4000, // slow recovery while he's idle
   regen: 1,
 };
+
+// Easter eggs.
+export const AVALANCHE = {
+  gravity: 0.0012,
+  groundY: 262, // books land on the floor in front of the case
+  rowDelayMs: 90, // each shelf up lets go a little later
+  jitterMs: 120,
+  settleMs: 2600,
+  reshelvePerFrame: 14,
+  reducedHoldMs: 1200,
+};
+
+export const EGGS = {
+  pokesToThrow: 5,
+  pokeWindowMs: 8000, // pokes older than this are forgiven
+  shushMs: 2500,
+  throwShakeMs: 450,
+  lightsOutMs: 30000, // lights come back on by themselves
+};

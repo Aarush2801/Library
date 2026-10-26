@@ -28,7 +28,8 @@ export function findBook(query) {
   );
 }
 
-// ctx: { log(text), clear(), fetch(book), skip(), unknown(), manners(), coffee() }
+// ctx: { log(text), clear(), fetch(book), skip(), unknown(), canRead(book) }
+// Easter-egg words (please, coffee, sudo...) are handled in eggs.js before this runs.
 export function createCommands(ctx) {
   let last = null;
 
@@ -36,7 +37,7 @@ export function createCommands(ctx) {
     if (!query) return ctx.log('Fetch what? Try ls.');
     const book = findBook(query);
     if (!book) return ctx.log(`No book called "${query}". Try ls.`);
-    if (book.hidden) return ctx.log("That one's restricted.");
+    if (book.hidden && !ctx.canRead(book)) return ctx.log("That one's restricted. Some say there's a password.");
     last = book;
     ctx.fetch(book);
   }
@@ -46,7 +47,7 @@ export function createCommands(ctx) {
       ctx.log(`Commands: ${COMMANDS.map((c) => c.name).join(', ')}, fetch <book>. While he's fetching: skip.`);
     },
     ls() {
-      const shelf = BOOKS.filter((b) => !b.hidden).map((b) => `${b.slug} (${b.call})`);
+      const shelf = BOOKS.filter((b) => !b.hidden || ctx.canRead(b)).map((b) => `${b.slug} (${b.call})`);
       ctx.log(`On the shelves: ${shelf.join(', ')}.`);
     },
     random() {
@@ -62,14 +63,6 @@ export function createCommands(ctx) {
     skip() {
       if (!ctx.skip()) ctx.log("Nothing to skip. He's not doing anything.");
     },
-    // Patience restorers. Step 7 counts these as easter eggs.
-    // "please resume" is polite *and* a request.
-    please(arg) {
-      ctx.manners();
-      if (arg) run(arg);
-    },
-    sorry: () => ctx.manners(),
-    coffee: () => ctx.coffee(),
   };
 
   function run(raw) {

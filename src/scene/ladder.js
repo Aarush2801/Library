@@ -39,7 +39,7 @@ export function createLadder(sceneW) {
       return sprite.x;
     },
     set x(v) {
-      sprite.x = Math.round(v);
+      if (!sprite.destroyed) sprite.x = Math.round(v);
     },
     // Rung y positions in scene space, for climbing later.
     rungs() {

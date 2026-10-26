@@ -21,8 +21,22 @@ export function rng(seed) {
   };
 }
 
-function painter(ctx) {
+export function painter(ctx) {
   return {
+    // 1px outer stroke: every empty pixel touching a filled one (4-neighbour).
+    outline(color) {
+      const { width: w, height: h } = ctx.canvas;
+      const a = ctx.getImageData(0, 0, w, h).data;
+      const filled = (x, y) => x >= 0 && y >= 0 && x < w && y < h && a[(y * w + x) * 4 + 3] > 0;
+      ctx.fillStyle = color;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (!filled(x, y) && (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1))) {
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+    },
     rect(x, y, w, h, color) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, w, h);

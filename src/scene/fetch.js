@@ -1,7 +1,8 @@
 // The fetch sequence: walk to the ladder, push it under the book, climb,
 // slide the book out, climb down, walk back to the desk, hand it over.
 // skip() jumps straight to the handoff.
-import { FETCH, LADDER, LIB, SHELF } from '../config.js';
+import { FETCH, LADDER, LIB, MOTION, SHELF } from '../config.js';
+import { sfx } from '../audio.js';
 import { rowBase } from './shelves.js';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -23,7 +24,7 @@ export function createFetcher({ getLibrary, onStart, onHandoff, onEnd }) {
         wakers.delete(done);
         resolve();
       };
-      const timer = setTimeout(done, ms);
+      const timer = setTimeout(done, ms / MOTION.speed);
       wakers.add(done);
     });
   }
@@ -67,11 +68,13 @@ export function createFetcher({ getLibrary, onStart, onHandoff, onEnd }) {
     guy.set('grab');
     for (let i = 0; i < FETCH.slideSteps; i++) {
       spot.sprite.y -= 2;
+      sfx('slide');
       await sleep(1000 / LIB.fps);
       check();
     }
     spot.sprite.visible = false;
     out = spot;
+    sfx('pop');
     await sleep(FETCH.grabMs);
     check();
 
@@ -113,6 +116,7 @@ export function createFetcher({ getLibrary, onStart, onHandoff, onEnd }) {
         skipped = true;
       }
       lib.librarian.set('handoff');
+      sfx('handoff');
       onHandoff?.(book, { skipped });
       busy = false;
       onEnd?.(book);

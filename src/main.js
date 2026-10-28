@@ -12,6 +12,7 @@ import { createTome } from './ui/tome.js';
 import { createHud } from './ui/hud.js';
 import { createMood } from './mood.js';
 import { createEggs } from './eggs.js';
+import { setSound, sfx, soundOn } from './audio.js';
 import './style.css';
 
 TextureSource.defaultOptions.scaleMode = 'nearest';
@@ -59,12 +60,18 @@ const run = createCommands({
     fetcher.fetch(book);
   },
   skip: () => fetcher.skip(),
-  unknown: () => mood.spend(PATIENCE.unknownCost),
+  unknown: () => {
+    sfx('error');
+    mood.spend(PATIENCE.unknownCost);
+  },
   canRead: (book) => eggs.isUnlocked(book.slug),
 });
 
 const ui = createConsole(consoleEl, {
-  onCommand: (text) => devCommand(text) || eggs.handle(text) || run(text),
+  onCommand: (text) => {
+    sfx('type', { vary: 0 });
+    devCommand(text) || eggs.handle(text) || run(text);
+  },
   onSkip: () => fetcher.skip(),
 });
 
@@ -91,6 +98,39 @@ const eggs = createEggs({
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !tome.isOpen && fetcher.busy) fetcher.skip();
 });
+
+// Sound toggle: off until the visitor asks for it.
+const soundBtn = consoleEl.querySelector('[data-sound]');
+function paintSound() {
+  soundBtn.textContent = soundOn() ? 'Sound on' : 'Sound off';
+  soundBtn.setAttribute('aria-pressed', String(soundOn()));
+}
+soundBtn.addEventListener('click', () => {
+  setSound(!soundOn());
+  paintSound();
+  sfx('click', { vary: 0 });
+});
+paintSound();
+
+// Keyboard route to the books: hidden buttons that ring the matching spine on focus.
+const shelfKeys = document.querySelector('[data-shelf-keys]');
+for (const book of BOOKS) {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = `Fetch ${book.title}`;
+  b.addEventListener('click', () => ui.submit(`fetch ${book.slug}`));
+  b.addEventListener('focus', () => {
+    library?.shelves.setFocus(book);
+    ui.setHover(book);
+  });
+  b.addEventListener('blur', () => {
+    library?.shelves.setFocus(null);
+    ui.setHover(null);
+  });
+  li.append(b);
+  shelfKeys.append(li);
+}
 
 const app = new Application();
 await app.init({

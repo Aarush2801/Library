@@ -86,8 +86,9 @@ body {
 
 .console__bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 8px 16px;
   font-family: var(--label);
   font-size: 16px;
   line-height: 16px;
@@ -103,6 +104,30 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+
+.sound {
+  flex: none;
+  font: inherit;
+  text-transform: uppercase;
+  color: var(--light);
+  background: var(--ink);
+  border: 2px solid var(--dark);
+  border-radius: 0;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.sound:hover,
+.sound[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--light);
+  border-color: var(--light);
+}
+
+.sound:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
 }
 
 /* Patience meter: ten segments, lit from the left. */
@@ -176,8 +201,20 @@ body {
 
 @media (max-width: 519px) {
   .console__title,
-  .hud__secrets-label {
+  .hud__secrets-label,
+  .console__hover {
     display: none;
+  }
+  /* Still named for screen readers; the meter speaks for itself visually. */
+  .hud__label:not(.hud.is-closed .hud__label) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .sound {
+    margin-left: auto;
   }
 }
 
@@ -366,6 +403,46 @@ body {
 
 .tome__page p {
   margin: 0 0 calc(var(--u) * 5);
+}
+
+.tome__page b {
+  font-weight: normal;
+  text-decoration: underline;
+  text-decoration-thickness: calc(var(--u) * 1);
+  text-underline-offset: calc(var(--u) * 1.5);
+}
+
+/* Tech line under a project or job title. */
+.tome__page .stack {
+  font-family: var(--label);
+  font-size: calc(var(--u) * 4.5);
+  line-height: calc(var(--u) * 6);
+  color: var(--dark);
+  text-transform: uppercase;
+  margin-top: calc(var(--u) * -2);
+}
+
+/* Pixel bullets: a 2x2 ink square, not a glyph. */
+.tome__page ul {
+  list-style: none;
+  margin: 0 0 calc(var(--u) * 5);
+  padding: 0;
+}
+
+.tome__page li {
+  position: relative;
+  padding-left: calc(var(--u) * 6);
+  margin-bottom: calc(var(--u) * 3);
+}
+
+.tome__page li::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--u) * 1);
+  top: calc(var(--u) * 3.5);
+  width: calc(var(--u) * 2);
+  height: calc(var(--u) * 2);
+  background: var(--ink);
 }
 
 .tome__page a {

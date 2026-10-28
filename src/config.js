@@ -134,3 +134,15 @@ export const EGGS = {
   throwShakeMs: 450,
   lightsOutMs: 30000, // lights come back on by themselves
 };
+
+// Sound. files: drop a jsfxr export in public/sfx/ and map it here, e.g.
+// step: '/sfx/step.wav'. Anything unmapped uses the built-in synth placeholder.
+export const SFX = {
+  volume: 0.5,
+  files: {},
+};
+
+// prefers-reduced-motion: the fetch runs ~10x faster and nothing shakes.
+export const MOTION = {
+  speed: typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? 10 : 1,
+};

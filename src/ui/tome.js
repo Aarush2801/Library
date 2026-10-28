@@ -3,6 +3,7 @@
 import { TOME } from '../config.js';
 import { OWNER } from '../content/books.js';
 import { LAYOUTS, drawBook, dissolve } from './tome-art.js';
+import { sfx } from '../audio.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const frameMs = 1000 / TOME.fps;
@@ -95,6 +96,8 @@ export function createTome(dialog, { onClose }) {
         el.setAttribute('aria-label', `Page ${n + 1} of ${pages.length}`);
       }
     });
+    // The DATE DUE card is the last page: thunk the stamp when it comes into view.
+    if (visible && index + perView() >= pages.length) setTimeout(() => sfx('stamp'), 200);
     const last = Math.min(index + perView(), pages.length);
     counter.textContent = perView() > 1 ? `${index + 1}-${last} / ${pages.length}` : `${index + 1} / ${pages.length}`;
     prevBtn.disabled = index === 0;
@@ -114,6 +117,7 @@ export function createTome(dialog, { onClose }) {
     const target = index + dir * step;
     if (animating || target < 0 || target >= pages.length) return;
     animating = true;
+    sfx('page');
     if (!reduced.matches) {
       showText(false);
       const all = TOME.turnFrames.map((_, i) => i);
@@ -144,6 +148,7 @@ export function createTome(dialog, { onClose }) {
     showText(false);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     dialog.showModal();
+    sfx('open');
     animating = true;
     if (reduced.matches) drawBook(ctx, layout());
     else await playDissolve(TOME.dissolveLevels);
@@ -156,6 +161,7 @@ export function createTome(dialog, { onClose }) {
     if (!dialog.open || animating) return;
     animating = true;
     showText(false);
+    sfx('close');
     if (!reduced.matches) await playDissolve([...TOME.dissolveLevels].reverse().slice(1).concat(0));
     dialog.close();
     animating = false;

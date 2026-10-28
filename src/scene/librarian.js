@@ -2,7 +2,8 @@
 // stepped movement so he snaps across the floor like a game sprite.
 import { AnimatedSprite, Container, Sprite } from 'pixi.js';
 import gsap from 'gsap';
-import { CSS, FPS, LIB } from '../config.js';
+import { CSS, FPS, LIB, MOTION } from '../config.js';
+import { sfx } from '../audio.js';
 import { canvasTexture } from './pixel.js';
 import { librarianFrames } from './librarian-art.js';
 
@@ -13,7 +14,7 @@ const SIDE_VIEW = new Set(['walk', 'push', 'throw']);
 // track() receives the tween so it can be finished early (skip).
 function stepTo(target, prop, to, speed, track) {
   const from = target[prop];
-  const duration = Math.abs(to - from) / speed;
+  const duration = Math.abs(to - from) / (speed * MOTION.speed);
   if (!duration) return Promise.resolve();
   const proxy = { v: from };
   return new Promise((resolve) => {
@@ -44,6 +45,12 @@ export function createLibrarian({ x, onPoke }) {
   sprite.eventMode = 'static';
   sprite.cursor = 'pointer';
   sprite.on('pointertap', () => onPoke?.());
+  // Footsteps, rung clanks and ladder scrapes ride the animation frames.
+  sprite.onFrameChange = (frame) => {
+    if (state === 'walk' && frame % 2 === 0) sfx('step');
+    else if (state === 'climb') sfx('rung');
+    else if (state === 'push') sfx('scrape');
+  };
   root.addChild(shadow, sprite);
 
   let state = null;

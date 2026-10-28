@@ -6,6 +6,7 @@ import { CSS, EGGS, FPS, LIB } from './config.js';
 import { pick } from './content/lines.js';
 import { avalanche } from './scene/avalanche.js';
 import { canvasTexture } from './scene/pixel.js';
+import { sfx } from './audio.js';
 
 export const EGG_LIST = [
   { id: 'sudo', name: 'Sudo' },
@@ -52,6 +53,7 @@ export function createEggs(ctx) {
     } catch {}
     const egg = EGG_LIST.find((e) => e.id === id);
     ctx.log(`Secret found: ${egg.name} (${found.size}/${EGG_LIST.length}).`);
+    setTimeout(() => sfx('secret', { vary: 0 }), 250);
     ctx.hud.setSecrets(found.size, EGG_LIST.length, { flash: true });
   }
 
@@ -79,6 +81,7 @@ export function createEggs(ctx) {
     found_('shh');
     if (ctx.mood.closed) return ctx.log('...He is already very quiet. He is asleep.');
     ctx.log('SHHHH. This is a LIBRARY.');
+    sfx('shush');
     if (playing) return;
     playing = true;
     const L = lib();
@@ -105,6 +108,8 @@ export function createEggs(ctx) {
     playing = true;
     found_('rmrf');
     ctx.log('...Did you just rm -rf my LIBRARY?');
+    // A rumble of thuds while the books come down.
+    if (!ctx.reducedMotion) for (let i = 0; i < 10; i++) setTimeout(() => sfx('thud', { vary: 0.25 }), 250 + i * 140);
     await avalanche(lib(), { reducedMotion: ctx.reducedMotion });
     ctx.log('Reshelved. Every. Single. One. Again.');
     playing = false;
@@ -122,6 +127,7 @@ export function createEggs(ctx) {
       return;
     }
     ctx.log(POKE_LINES[Math.min(pokes.length, POKE_LINES.length) - 1]);
+    sfx('huff');
     lib().librarian.hold('huff', LIB.pokeHuffMs);
   }
 
@@ -145,6 +151,7 @@ export function createEggs(ctx) {
     book.anchor.set(0.5);
     book.position.set(guy.x, guy.y - 34);
     L.fxLayer.addChild(book);
+    sfx('throw');
     const path = { t: 0 };
     const from = { x: book.x, y: book.y };
     const to = { x: L.w / 2, y: 120 };
@@ -165,6 +172,7 @@ export function createEggs(ctx) {
         onComplete: resolve,
       }),
     );
+    sfx('thud');
     if (!ctx.reducedMotion) L.shake(EGGS.throwShakeMs, 3);
     // Thunk. It drops to the floor and lies there a moment.
     if (!book.destroyed) {
@@ -182,6 +190,7 @@ export function createEggs(ctx) {
   function setLights(on) {
     lightsOn = on;
     clearTimeout(lightsTimer);
+    sfx('click', { vary: 0 });
     lib().darkness.sprite.visible = !on;
     if (!on) lightsTimer = setTimeout(() => setLights(true), EGGS.lightsOutMs);
   }

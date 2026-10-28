@@ -3,6 +3,7 @@
 import { PATIENCE } from './config.js';
 import { CLOSING, COFFEE, MANNERS, MANNERS_REOPEN, REOPEN, pick } from './content/lines.js';
 import { createPatience } from './patience.js';
+import { sfx } from './audio.js';
 
 export function createMood({ getLibrary, hud, log, isBusy }) {
   let closed = false;
@@ -30,6 +31,7 @@ export function createMood({ getLibrary, hud, log, isBusy }) {
     pendingClose = false;
     reopenAt = Date.now() + PATIENCE.closedMs;
     log(CLOSING);
+    sfx('closed');
     showClosed();
     hud.setPatience(patience.value, { closed });
     timer = setTimeout(() => reopen(REOPEN), PATIENCE.closedMs);
@@ -49,6 +51,7 @@ export function createMood({ getLibrary, hud, log, isBusy }) {
     patience.set(Math.max(patience.value, PATIENCE.reopenAt));
     hud.setPatience(patience.value);
     getLibrary().librarian.rest();
+    sfx('reopen');
     log(line);
   }
 
@@ -72,11 +75,13 @@ export function createMood({ getLibrary, hud, log, isBusy }) {
     spend: (n) => patience.spend(n),
     manners() {
       patience.restore(PATIENCE.manners);
+      sfx('happy');
       if (closed) reopen(MANNERS_REOPEN);
       else log(pick(MANNERS));
     },
     coffee() {
       patience.fill();
+      sfx('happy');
       if (closed) reopen(COFFEE);
       else log(COFFEE);
     },

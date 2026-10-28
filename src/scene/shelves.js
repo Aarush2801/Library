@@ -187,6 +187,25 @@ export function createShelves(w, books, { onHover, onSelect } = {}) {
     featured.push({ book: s.book, sprite, x: s.x, w: s.w, row: s.row, restY });
   }
 
+  // Keyboard focus ring: a paper outline drawn around the focused spine.
+  let ring = null;
+  function setFocus(book) {
+    ring?.destroy({ texture: true, textureSource: true });
+    ring = null;
+    const f = featured.find((x) => x.book === book);
+    if (!f || !f.sprite.visible) return;
+    const h = f.sprite.height;
+    ring = new Sprite(
+      canvasTexture(f.w + 4, h + 4, (p) => {
+        p.rect(0, 0, f.w + 4, h + 4, CSS.PAPER);
+        p.rect(1, 1, f.w + 2, h + 2, CSS.INK);
+      }),
+    );
+    // Hollow: an ink frame inside the paper one, with the spine drawn on top.
+    ring.position.set(f.x - 2, f.restY - 2);
+    container.addChildAt(ring, container.getChildIndex(f.sprite));
+  }
+
   const missing = books.filter((b) => !featured.some((f) => f.book === b));
   if (missing.length) {
     console.warn('Books with a slot past the end of their shelf at this width:', missing.map((b) => b.slug));
@@ -207,6 +226,7 @@ export function createShelves(w, books, { onHover, onSelect } = {}) {
       caseSprite.texture = empty ? emptyTex : fullTex;
       for (const f of featured) f.sprite.visible = !empty;
     },
+    setFocus,
     // Call before the scene destroys its sprites, so each texture is freed once.
     destroy() {
       caseSprite.texture = fullTex;
